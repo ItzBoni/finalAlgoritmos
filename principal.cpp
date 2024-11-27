@@ -7,9 +7,11 @@
 #include<ctime>   // Para time()
 #include<algorithm>
 #include<random>
+//#include<timer.h>
 
 using namespace std;
 
+//Estructura para almacenar las respuestas y si es correcta
 struct Respuesta {
     string respuesta;
     bool respuestaCorrecta;
@@ -25,11 +27,6 @@ struct Pregunta {
     Respuesta respuesta4;
 };
 
-//Función para el timer del juego
-int timerJuego(){
-
-}
-
 //Función de comodin que elimina dos respuestas al azar
 int eliminarRespuestas() {    
     srand(int(time(NULL)));
@@ -43,29 +40,25 @@ void añadirTiempo(){
 
 }
 
-//Función para cambiar de pregunta
-void cambiarPregunta(){
-
-}
-
 // Función para leer el CSV y devolver una pregunta aleatoria
-Pregunta buscarPreguntaAleatoria(const string& nombreArchivo, const int faseActual) {
+Pregunta buscarPreguntaAleatoria(const string& nombreArchivo, int faseActual) {
+    vector<Pregunta> preguntas;
+    string linea;
+    int indiceAleatorio;
+
     ifstream archivo(nombreArchivo);
     if (!archivo.is_open()) {
         cout << "No se pudo abrir el archivo: " << nombreArchivo << endl;
         return {}; // Retornar estructura vacía
     }
 
-    vector<Pregunta> preguntas;
-    string linea;
-
+    //Linea para excluir los titulos de las columnas
     getline(archivo, linea);
 
     // Leer el resto de las líneas del archivo
     while (getline(archivo, linea)) {
         stringstream ss(linea);
-        string fase, pregunta, indiceCorrecto;
-        string respuesta1, respuesta2, respuesta3, respuesta4;
+        string fase, pregunta, respuesta1, respuesta2, respuesta3, respuesta4;
 
         bool correcta1 = false;
         bool correcta2 = false;
@@ -94,17 +87,20 @@ Pregunta buscarPreguntaAleatoria(const string& nombreArchivo, const int faseActu
     // Semilla para números aleatorios
     srand(double(time(NULL)));
 
-    // Seleccionar pregunta de la fase que se ha seleccionado
-    int indiceAleatorio;
+    // Elegir pregunta de la fase actual
     do {
         indiceAleatorio = rand() % preguntas.size();
         if(stoi(preguntas[indiceAleatorio].fase) == faseActual){
             return preguntas[indiceAleatorio];
         }
     } while (indiceAleatorio != faseActual);
+    
+    //Si no se retorna nada con el código de arriba se hace esto
+    cout << "No hay preguntas para la fase " << faseActual << endl;
+    return {};
 }
 
-//Función para imprimir las respuestas de forma aleatoria (REHACER CON EL METODO DE STRUCT DE RESPUESTAS DE DONO)
+//Función para imprimir las respuestas de forma aleatoria
 void mezclarRespuestas(Pregunta& pregunta){
     vector<Respuesta> respuestasMezclar;
     
@@ -127,65 +123,101 @@ void mezclarRespuestas(Pregunta& pregunta){
     pregunta.respuesta4 = respuestasMezclar[3];
 }
 
+//Función para powerup de cambiar la pregunta
+Pregunta cambiarPregunta(string nombreArchivo, int faseActual, Pregunta preguntaActual){
+    Pregunta preguntaNueva = {};
+    do {
+        preguntaNueva = buscarPreguntaAleatoria(nombreArchivo, faseActual);
+    } while (preguntaNueva.pregunta == preguntaActual.pregunta); 
+    
+    if (preguntaNueva.pregunta.empty()) {
+            cout << "No se pudo encontrar una nueva pregunta diferente." << endl;
+            return preguntaActual; // Puedes decidir si mantener la pregunta actual o devolver una vacía
+        }
+    
+    return preguntaNueva;
+}
+
 int main() {
+    //Declarar variables a usar
+    Pregunta preguntaAleatoria;
+    Pregunta preguntaNueva;
     bool esCorrecta = false;
     int dineroUsuario = 0;
-    int inputUsuario;
+    char inputUsuario;
     string nombreArchivo = "preguntas.csv"; 
     int faseActual = 1;
-    Pregunta preguntaAleatoria = buscarPreguntaAleatoria(nombreArchivo, faseActual);
-
-    mezclarRespuestas(preguntaAleatoria);
 
     do {
         cout<<"Bienvenido a como ser millonario! Presione enter para iniciar."<<endl;
     } while (cin.get() != '\n');
 
     do {
-    cout<<"Bienvenido a la fase"<<faseActual<<endl;
+        preguntaAleatoria = buscarPreguntaAleatoria(nombreArchivo, faseActual);
+        mezclarRespuestas(preguntaAleatoria);
+        cout<<"Bienvenido a la fase "<<faseActual<<endl;
 
-    if (preguntaAleatoria.pregunta.empty()) {
-        cerr << "No se pudo obtener una pregunta." << endl;
-        return 1;
-    }
-
-    //Mostrar pregunta y respuestas
-    cout << "Pregunta: " << preguntaAleatoria.pregunta << endl;
-    
-    cout << "1) " << preguntaAleatoria.respuesta1.respuesta << endl;
-    cout << "2) " << preguntaAleatoria.respuesta2.respuesta << endl;
-    cout << "3) " << preguntaAleatoria.respuesta3.respuesta << endl;
-    cout << "4) " << preguntaAleatoria.respuesta4.respuesta << endl;
-
-    cin>>inputUsuario;
-
-    //Si la respuesta introducida es correcta, aumentar la fase por uno
-    switch (inputUsuario) {
-        case 1:
-            esCorrecta = preguntaAleatoria.respuesta1.respuestaCorrecta;
-            break;
-        case 2:
-            esCorrecta = preguntaAleatoria.respuesta2.respuestaCorrecta;
-            break;
-        case 3:
-            esCorrecta = preguntaAleatoria.respuesta3.respuestaCorrecta;
-            break;
-        case 4:
-            esCorrecta = preguntaAleatoria.respuesta4.respuestaCorrecta;
-            break;
-        default:
-            cout << "Entrada no válida. Intente de nuevo." << endl;
-            continue;
+        if (preguntaAleatoria.pregunta.empty()) {
+            cerr << "No se pudo obtener una pregunta." << endl;
+            return 1;
         }
 
-        // Ver resultado
-        if (esCorrecta) {
-            cout << "¡Respuesta correcta!" << endl;
-            faseActual+=1;
-        } else {
-            cout << "Respuesta incorrecta. Fin del juego." << endl;
-        }
-    } while(faseActual <= 10 || esCorrecta == false); // Parte para sacar del programa si gana o pierde xd
+        //Mostrar pregunta y respuestas
+        cout << "Pregunta: " << preguntaAleatoria.pregunta << endl;
+        
+        cout << "1) " << preguntaAleatoria.respuesta1.respuesta << endl;
+        cout << "2) " << preguntaAleatoria.respuesta2.respuesta << endl;
+        cout << "3) " << preguntaAleatoria.respuesta3.respuesta << endl;
+        cout << "4) " << preguntaAleatoria.respuesta4.respuesta << endl;
+
+        cin>>inputUsuario;
+
+        //Si la respuesta introducida es correcta, aumentar la fase por uno
+        switch (inputUsuario) {
+            case '1':
+                esCorrecta = preguntaAleatoria.respuesta1.respuestaCorrecta;
+                break;
+            case '2':
+                esCorrecta = preguntaAleatoria.respuesta2.respuestaCorrecta;
+                break;
+            case '3':
+                esCorrecta = preguntaAleatoria.respuesta3.respuestaCorrecta;
+                break;
+            case '4':
+                esCorrecta = preguntaAleatoria.respuesta4.respuestaCorrecta;
+                break;
+
+            //Caso para usar un comodín (NO ESTÁ TERMINADO)
+            case 'A':
+                preguntaNueva = cambiarPregunta(nombreArchivo, faseActual, preguntaAleatoria);
+                cout << "Pregunta: " << preguntaNueva.pregunta << endl;
+        
+                cout << "1) " << preguntaNueva.respuesta1.respuesta << endl;
+                cout << "2) " << preguntaNueva.respuesta2.respuesta << endl;
+                cout << "3) " << preguntaNueva.respuesta3.respuesta << endl;
+                cout << "4) " << preguntaNueva.respuesta4.respuesta << endl;
+
+                break;
+            //Caso para usar función de agrear tiempo
+            case 'B':
+                break;
+            //Caso para usar borrar dos respuestas
+            case 'C':
+                break;
+            default:
+                cout << "Entrada no válida. Intente de nuevo." << endl;
+                continue;
+            }
+
+            // Ver resultado
+            if (esCorrecta) {
+                cout << "¡Respuesta correcta!" << endl;
+                faseActual+=1;
+            } else {
+                cout << "Respuesta incorrecta. Fin del juego." << endl;
+                //Agregar codigo para aumentar dinero
+            }
+    } while(faseActual <= 10 || esCorrecta == true); // Parte para sacar del programa si gana o pierde xd
 
     do {
         if(faseActual < 10){
