@@ -38,7 +38,7 @@ struct Pregunta {
 void iniciarTemporizador(int duracionSegundos, atomic<bool>& tiempoTerminado) {
     for (int i = duracionSegundos; i > 0; --i) {
         if (tiempoTerminado) return; // Salir si el jugador responde
-        cout <<"\033[s" << "\033[18;54H" << "Tiempo restante: " << i << " segundos" << "\033[u"; //gracias Donovan por el truco con ASCII
+        cout <<"\033[s" << "\033[18;53H" << "Tiempo restante: " << i << " segundos" << "\033[u"; //gracias Donovan por el truco con ASCII
         this_thread::sleep_for(chrono::seconds(1)); // Esperar 1 segundo
     }
     tiempoTerminado = true; // Marcar que el tiempo ha terminado
@@ -84,12 +84,6 @@ int dinero(int dineroUsuario, int faseActual) {
     }
 
     return dineroUsuario;
-}
-
-
-//Función para añadir tiempo
-void añadirTiempo(){
-
 }
 
 // Función para leer el CSV y devolver una pregunta aleatoria
@@ -241,65 +235,26 @@ void imprimirCentrado(const string& texto, const string& texto2 = "", const stri
     cout << textoCompleto << endl;
 }
 
-
-//Si llegas al punto de una fase alta poner que pierdan todo el dinero.
-
-int main() {
-    // Semilla para números aleatorios
-    srand(double(time(NULL)));
-    system("cls");
-    //Declarar variables a usar
-    Pregunta preguntaAleatoria;
-    Pregunta preguntaNueva;
-    bool esCorrecta = false;
-    char inputUsuario;
-    int faseActual = 1;
-    int dineroUsuario = 0;
-    const int TIEMPO_LIMITE = 30;
-    string nombreArchivo = "preguntas.csv"; 
-    string respuesta1, respuesta2, respuesta3, respuesta4;
-    atomic<bool> tiempoTerminado = false;
-
-    //Variables para la pantalla
+//Función para imprimir las preguntas y las respuestas
+void imprimirPreguntas(Pregunta& preguntaAleatoria, bool comodinA = false, bool comodinB = false, bool comodinC = false){
     string divisor(90,'_');
     string marcoPregunta;
-    string nombreJuego = R"(
-          ___        _                          _                                           _ _ _                        _        
-         / _ \ _   _(_) ___ _ __     __ _ _   _(_) ___ _ __ ___   ___  ___ _ __   _ __ ___ (_) | | ___  _ __   __ _ _ __(_) ___   
-        | | | | | | | |/ _ \ '_ \   / _` | | | | |/ _ \ '__/ _ \ / __|/ _ \ '__| | '_ ` _ \| | | |/ _ \| '_ \ / _` | '__| |/ _ \  
-        | |_| | |_| | |  __/ | | | | (_| | |_| | |  __/ | |  __/ \__ \  __/ |    | | | | | | | | | (_) | | | | (_| | |  | | (_) | 
-         \__\_\\__,_|_|\___|_| |_|  \__, |\__,_|_|\___|_|  \___| |___/\___|_|    |_| |_| |_|_|_|_|\___/|_| |_|\__,_|_|  |_|\___/  
-                                       |_|                                                                                        
-            )";
+    string respuesta1, respuesta2, respuesta3, respuesta4;
+    string comodinPregunta = "";
+    string comodinTimer = "";
+    string comodinRespuesta = "";
 
-    //Parte principal del programa para seguir repitiendo hasta ganar o que el usuario pierda.
-    while (faseActual <= 10) {
-        system("cls");
-        tiempoTerminado = false;
+    if(!comodinA) comodinPregunta = "A) Cambiar Pregunta";
+    if(!comodinB) comodinTimer = "B) Agregar Tiempo";
+    if(!comodinC) comodinRespuesta = "C) Eliminar dos respuestas";
 
-        do {
-            imprimirCentrado(divisor);
-            cout<<nombreJuego<<endl;
-            imprimirCentrado(divisor);
-            if(faseActual <2) imprimirCentrado("Presione enter para iniciar");
-        } while (cin.get() != '\n');
-
-        preguntaAleatoria = buscarPreguntaAleatoria(nombreArchivo, faseActual);
-        mezclarRespuestas(preguntaAleatoria);
-
-        if (preguntaAleatoria.pregunta.empty()) {
+    if (preguntaAleatoria.pregunta.empty()) {
             cerr << "No se pudo obtener una pregunta." << endl;
-            return 1;
-        }
+    }
 
-        imprimirCentrado("Bienvenido a la fase ", to_string(faseActual));
-        imprimirCentrado("Su dinero en el banco es: $", to_string(dineroUsuario));
-        cout<<endl;
-
-        //Calcular el largo del marco para que se vea acorde con el tamaño de la pregunta
-        for(int tamano; tamano<size(preguntaAleatoria.pregunta); tamano++){
+    for(int tamano; tamano<size(preguntaAleatoria.pregunta); tamano++){
             marcoPregunta += (tamano, '_');
-        }
+    }
 
         //Mostrar pregunta y respuestas (con formato bonito ahora sí)
         imprimirCentrado(marcoPregunta);
@@ -318,13 +273,66 @@ int main() {
         cout<<"\n";
 
         imprimirCentrado(divisor);
-        imprimirCentrado("A) Cambiar pregunta ", "B) Agregar tiempo ", " C) Borrar dos respuestas");
+        imprimirCentrado(comodinPregunta, comodinTimer, comodinRespuesta);
         imprimirCentrado(divisor);
         
         cout<<endl;
 
         imprimirCentrado(respuesta1, respuesta2);
         imprimirCentrado(respuesta3, respuesta4); 
+
+}
+
+
+//Si llegas al punto de una fase alta poner que pierdan todo el dinero.
+
+int main() {
+    // Semilla para números aleatorios
+    srand(double(time(NULL)));
+    system("cls");
+    //Declarar variables a usar
+    Pregunta preguntaAleatoria;
+    bool esCorrecta = false;
+    bool comodinPregunta = false;
+    bool comodinTimer = false;
+    bool comodinRespuestas = false;
+    char inputUsuario;
+    int faseActual = 1;
+    int dineroUsuario = 0;
+    const int TIEMPO_LIMITE = 30;
+    string nombreArchivo = "preguntas.csv"; 
+    atomic<bool> tiempoTerminado = false;
+    //Variables para la pantalla
+    string divisor(90,'_');
+    string nombreJuego = R"(
+  ___        _                          _                                           _ _ _                        _        
+ / _ \ _   _(_) ___ _ __     __ _ _   _(_) ___ _ __ ___   ___  ___ _ __   _ __ ___ (_) | | ___  _ __   __ _ _ __(_) ___   
+| | | | | | | |/ _ \ '_ \   / _` | | | | |/ _ \ '__/ _ \ / __|/ _ \ '__| | '_ ` _ \| | | |/ _ \| '_ \ / _` | '__| |/ _ \  
+| |_| | |_| | |  __/ | | | | (_| | |_| | |  __/ | |  __/ \__ \  __/ |    | | | | | | | | | (_) | | | | (_| | |  | | (_) |
+ \__\_\\__,_|_|\___|_| |_|  \__, |\__,_|_|\___|_|  \___| |___/\___|_|    |_| |_| |_|_|_|_|\___/|_| |_|\__,_|_|  |_|\___/  
+                               |_|                                                                                        )";
+
+    //Parte principal del programa para seguir repitiendo hasta ganar o que el usuario pierda.
+    while (faseActual <= 10) {
+        system("cls");
+        tiempoTerminado = false;
+
+        do {
+            imprimirCentrado(divisor);
+            cout<<nombreJuego<<endl;
+            imprimirCentrado(divisor);
+            if(faseActual <2) imprimirCentrado("Presione enter para iniciar");
+        } while (cin.get() != '\n');
+
+        imprimirCentrado("Bienvenido a la fase ", to_string(faseActual));
+        imprimirCentrado("Su dinero en el banco es: $", to_string(dineroUsuario));
+        cout<<endl;
+
+        //Creo pregunta Aleatoria dentro de esta función
+        preguntaAleatoria = buscarPreguntaAleatoria(nombreArchivo, faseActual);
+        mezclarRespuestas(preguntaAleatoria);
+
+        imprimirPreguntas(preguntaAleatoria);
 
         Sleep(500);
 
@@ -355,15 +363,8 @@ int main() {
                 esCorrecta = preguntaAleatoria.respuesta4.respuestaCorrecta;
                 break;
             case 'A':
-                system("cls");
-                preguntaNueva = cambiarPregunta(nombreArchivo, faseActual, preguntaAleatoria);
-                cout << "Pregunta: " << preguntaNueva.pregunta << endl;
-        
-                cout << "1) " << preguntaNueva.respuesta1.respuesta << endl;
-                cout << "2) " << preguntaNueva.respuesta2.respuesta << endl;
-                cout << "3) " << preguntaNueva.respuesta3.respuesta << endl;
-                cout << "4) " << preguntaNueva.respuesta4.respuesta << endl;
-
+                comodinPregunta = true;
+                continue;
                 break;
             //Caso para usar función de agrear tiempo
             case 'B':
@@ -371,10 +372,7 @@ int main() {
              //Caso para usar borrar dos respuestas
             case 'C':
                 eliminarDosRespuestas(preguntaAleatoria);
-                imprimirCentrado(marcoPregunta);
-                imprimirCentrado(preguntaAleatoria.pregunta);
-                imprimirCentrado(marcoPregunta);
-
+                comodinRespuestas = true;
                 break;
 
             case 'Y':
@@ -390,13 +388,15 @@ int main() {
                 dineroUsuario += dinero(dineroUsuario, faseActual);
                 cout<<"Ahora tiene "<< dineroUsuario<<" en el banco"<<endl;
                 system("cls");
-            }  else {
-            system("cls");
-            cout<<nombreJuego<<endl;
-            imprimirCentrado(divisor);
-            imprimirCentrado("Respuesta incorrecta. Fin del juego.");
-            imprimirCentrado("Termina el juego con: $", to_string(dineroUsuario));
-            exit(1);//Cambiar el código para que no me saque de una vez.
+            }  else if (comodinPregunta) {
+                continue;
+            } else {
+                system("cls");
+                cout<<nombreJuego<<endl;
+                imprimirCentrado(divisor);
+                imprimirCentrado("Respuesta incorrecta. Fin del juego.");
+                imprimirCentrado("Termina el juego con: $", to_string(dineroUsuario));
+                exit(1);//Cambiar el código para que no me saque de una vez.
             }
     }
 
@@ -412,4 +412,4 @@ int main() {
 
 //Proyecto hecho por Santiago Andrés Bonilla Ospina, Antonio Enrique Velasco, Pablo Gianni Jaled.
 
-//Agradecimiento especial a Donovan y a Chat GPT por explicarnos cosas cuando no las entendíamos.
+//Agradecimiento especial a Donovan por explicarnos cosas cuando no las entendíamos.
