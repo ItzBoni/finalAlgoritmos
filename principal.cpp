@@ -3,13 +3,20 @@
 #include<vector>
 #include<string>
 #include<sstream>
-#include<cstdlib> // Para srand() y rand()
-#include<ctime>   // Para time()
+#include<cstdlib>
+#include<ctime>
 #include<algorithm>
 #include<random>
-//#include<timer.h>
+#include<Windows.h>
+#include<thread>
+#include<chrono>
+#include<atomic>
+#include<mutex>
 
 using namespace std;
+
+//Variables globales
+mutex coutMutex;
 
 //Estructura para almacenar las respuestas y si es correcta
 struct Respuesta {
@@ -27,13 +34,58 @@ struct Pregunta {
     Respuesta respuesta4;
 };
 
-//Función de comodin que elimina dos respuestas al azar
-int eliminarRespuestas() {    
-    srand(int(time(NULL)));
-    int indiceBorrar = rand() % 3 + 1;
-
-    return indiceBorrar;
+//Función que maneja el temporizador en el juego
+void iniciarTemporizador(int duracionSegundos, atomic<bool>& tiempoTerminado) {
+    for (int i = duracionSegundos; i > 0; --i) {
+        if (tiempoTerminado) return; // Salir si el jugador responde
+        cout <<"\033[s" << "\033[18;54H" << "Tiempo restante: " << i << " segundos" << "\033[u"; //gracias Donovan por el truco con ASCII
+        this_thread::sleep_for(chrono::seconds(1)); // Esperar 1 segundo
+    }
+    tiempoTerminado = true; // Marcar que el tiempo ha terminado
 }
+
+//Función para manejar el dinero en el juego
+int dinero(int dineroUsuario, int faseActual) {
+    switch (faseActual)
+    {
+    case 1:
+        dineroUsuario += 1000;
+        break;
+    case 2:
+        dineroUsuario += 2000;
+        break;
+    case 3:
+        dineroUsuario += 3000;
+        break;
+    case 4:
+        dineroUsuario += 5000;
+        break;
+    case 5:
+        dineroUsuario += 10000;
+        break;
+    case 6:
+        dineroUsuario += 20000;
+        break;
+    case 7:
+        dineroUsuario += 40000;
+        break;
+    case 8:
+        dineroUsuario += 80000;
+        break;
+    case 9:
+        dineroUsuario += 160000;
+        break;
+    case 10:
+        dineroUsuario += 250000;
+        break;
+    
+    default:
+        break;
+    }
+
+    return dineroUsuario;
+}
+
 
 //Función para añadir tiempo
 void añadirTiempo(){
@@ -84,9 +136,6 @@ Pregunta buscarPreguntaAleatoria(const string& nombreArchivo, int faseActual) {
         return {};
     }
 
-    // Semilla para números aleatorios
-    srand(double(time(NULL)));
-
     // Elegir pregunta de la fase actual
     do {
         indiceAleatorio = rand() % preguntas.size();
@@ -125,6 +174,7 @@ void mezclarRespuestas(Pregunta& pregunta){
 
 //Función para powerup de cambiar la pregunta
 Pregunta cambiarPregunta(string nombreArchivo, int faseActual, Pregunta preguntaActual){
+    system("cls");
     Pregunta preguntaNueva = {};
     do {
         preguntaNueva = buscarPreguntaAleatoria(nombreArchivo, faseActual);
@@ -132,45 +182,163 @@ Pregunta cambiarPregunta(string nombreArchivo, int faseActual, Pregunta pregunta
     
     if (preguntaNueva.pregunta.empty()) {
             cout << "No se pudo encontrar una nueva pregunta diferente." << endl;
-            return preguntaActual; // Puedes decidir si mantener la pregunta actual o devolver una vacía
+            return preguntaActual; 
         }
     
     return preguntaNueva;
 }
 
+void eliminarDosRespuestas(Pregunta& pregunta) {
+    vector<int> indicesIncorrectos;
+    if (!pregunta.respuesta1.respuestaCorrecta) indicesIncorrectos.push_back(1);
+    if (!pregunta.respuesta2.respuestaCorrecta) indicesIncorrectos.push_back(2);
+    if (!pregunta.respuesta3.respuestaCorrecta) indicesIncorrectos.push_back(3);
+    if (!pregunta.respuesta4.respuestaCorrecta) indicesIncorrectos.push_back(4);
+
+    // Barajar los �ndices y eliminar dos
+    random_device rd;
+    mt19937 g(rd());
+    shuffle(indicesIncorrectos.begin(), indicesIncorrectos.end(), g);
+
+    // Marcar como "eliminadas" las respuestas incorrectas
+    int aEliminar1 = indicesIncorrectos[0];
+    int aEliminar2 = indicesIncorrectos[1];
+
+    switch (aEliminar1) {
+        case 1: pregunta.respuesta1.respuesta = "ELIMINADA"; break;
+        case 2: pregunta.respuesta2.respuesta = "ELIMINADA"; break;
+        case 3: pregunta.respuesta3.respuesta = "ELIMINADA"; break;
+        case 4: pregunta.respuesta4.respuesta = "ELIMINADA"; break;
+    }
+    switch (aEliminar2) {
+        case 1: pregunta.respuesta1.respuesta = "ELIMINADA"; break;
+        case 2: pregunta.respuesta2.respuesta = "ELIMINADA"; break;
+        case 3: pregunta.respuesta3.respuesta = "ELIMINADA"; break;
+        case 4: pregunta.respuesta4.respuesta = "ELIMINADA"; break;
+    }
+}
+
+//Función que calcula el ancho de la pantalla para hacer display de la pregunta
+int obtenerAnchoConsola() {
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+}
+
+//Función para imprimir centrado en la pantalla
+void imprimirCentrado(const string& texto, const string& texto2 = "", const string& texto3 = "") {
+    int anchoConsola = obtenerAnchoConsola();
+
+    string textoCompleto = texto;
+    if (!texto2.empty()) textoCompleto += " " + texto2;
+    if (!texto3.empty()) textoCompleto += " " + texto3;
+
+    int espacios = (anchoConsola - textoCompleto.size()) / 2;
+    if (espacios > 0) {
+        cout << string(espacios, ' ');
+    }
+
+    cout << textoCompleto << endl;
+}
+
+
+//Si llegas al punto de una fase alta poner que pierdan todo el dinero.
+
 int main() {
+    // Semilla para números aleatorios
+    srand(double(time(NULL)));
+    system("cls");
     //Declarar variables a usar
     Pregunta preguntaAleatoria;
     Pregunta preguntaNueva;
     bool esCorrecta = false;
-    int dineroUsuario = 0;
     char inputUsuario;
-    string nombreArchivo = "preguntas.csv"; 
     int faseActual = 1;
+    int dineroUsuario = 0;
+    const int TIEMPO_LIMITE = 30;
+    string nombreArchivo = "preguntas.csv"; 
+    string respuesta1, respuesta2, respuesta3, respuesta4;
+    atomic<bool> tiempoTerminado = false;
 
-    do {
-        cout<<"Bienvenido a como ser millonario! Presione enter para iniciar."<<endl;
-    } while (cin.get() != '\n');
+    //Variables para la pantalla
+    string divisor(90,'_');
+    string marcoPregunta;
+    string nombreJuego = R"(
+          ___        _                          _                                           _ _ _                        _        
+         / _ \ _   _(_) ___ _ __     __ _ _   _(_) ___ _ __ ___   ___  ___ _ __   _ __ ___ (_) | | ___  _ __   __ _ _ __(_) ___   
+        | | | | | | | |/ _ \ '_ \   / _` | | | | |/ _ \ '__/ _ \ / __|/ _ \ '__| | '_ ` _ \| | | |/ _ \| '_ \ / _` | '__| |/ _ \  
+        | |_| | |_| | |  __/ | | | | (_| | |_| | |  __/ | |  __/ \__ \  __/ |    | | | | | | | | | (_) | | | | (_| | |  | | (_) | 
+         \__\_\\__,_|_|\___|_| |_|  \__, |\__,_|_|\___|_|  \___| |___/\___|_|    |_| |_| |_|_|_|_|\___/|_| |_|\__,_|_|  |_|\___/  
+                                       |_|                                                                                        
+            )";
 
-    do {
+    //Parte principal del programa para seguir repitiendo hasta ganar o que el usuario pierda.
+    while (faseActual <= 10) {
+        system("cls");
+        tiempoTerminado = false;
+
+        do {
+            imprimirCentrado(divisor);
+            cout<<nombreJuego<<endl;
+            imprimirCentrado(divisor);
+            if(faseActual <2) imprimirCentrado("Presione enter para iniciar");
+        } while (cin.get() != '\n');
+
         preguntaAleatoria = buscarPreguntaAleatoria(nombreArchivo, faseActual);
         mezclarRespuestas(preguntaAleatoria);
-        cout<<"Bienvenido a la fase "<<faseActual<<endl;
 
         if (preguntaAleatoria.pregunta.empty()) {
             cerr << "No se pudo obtener una pregunta." << endl;
             return 1;
         }
 
-        //Mostrar pregunta y respuestas
-        cout << "Pregunta: " << preguntaAleatoria.pregunta << endl;
-        
-        cout << "1) " << preguntaAleatoria.respuesta1.respuesta << endl;
-        cout << "2) " << preguntaAleatoria.respuesta2.respuesta << endl;
-        cout << "3) " << preguntaAleatoria.respuesta3.respuesta << endl;
-        cout << "4) " << preguntaAleatoria.respuesta4.respuesta << endl;
+        imprimirCentrado("Bienvenido a la fase ", to_string(faseActual));
+        imprimirCentrado("Su dinero en el banco es: $", to_string(dineroUsuario));
+        cout<<endl;
 
-        cin>>inputUsuario;
+        //Calcular el largo del marco para que se vea acorde con el tamaño de la pregunta
+        for(int tamano; tamano<size(preguntaAleatoria.pregunta); tamano++){
+            marcoPregunta += (tamano, '_');
+        }
+
+        //Mostrar pregunta y respuestas (con formato bonito ahora sí)
+        imprimirCentrado(marcoPregunta);
+        imprimirCentrado(preguntaAleatoria.pregunta);
+        imprimirCentrado(marcoPregunta);
+
+        cout<<"\n";        
+    
+        respuesta1 = "1) " + preguntaAleatoria.respuesta1.respuesta;
+        respuesta2 = "2) " + preguntaAleatoria.respuesta2.respuesta;
+        respuesta3 = "3) " + preguntaAleatoria.respuesta3.respuesta;
+        respuesta4 = "4) " + preguntaAleatoria.respuesta4.respuesta;
+
+        cout<<"\n";
+        imprimirCentrado("Comodines");
+        cout<<"\n";
+
+        imprimirCentrado(divisor);
+        imprimirCentrado("A) Cambiar pregunta ", "B) Agregar tiempo ", " C) Borrar dos respuestas");
+        imprimirCentrado(divisor);
+        
+        cout<<endl;
+
+        imprimirCentrado(respuesta1, respuesta2);
+        imprimirCentrado(respuesta3, respuesta4); 
+
+        Sleep(500);
+
+        thread temporizador(iniciarTemporizador, TIEMPO_LIMITE, ref(tiempoTerminado));
+
+        {
+            lock_guard<mutex> lock(coutMutex);
+            imprimirCentrado("Su respuesta es: ");
+            cin>>inputUsuario;
+        }
+
+        //Termina el temporizador si el tiempo es el correcto, y después lo agrega al programa
+        tiempoTerminado = true;
+        temporizador.join();
 
         //Si la respuesta introducida es correcta, aumentar la fase por uno
         switch (inputUsuario) {
@@ -186,9 +354,8 @@ int main() {
             case '4':
                 esCorrecta = preguntaAleatoria.respuesta4.respuestaCorrecta;
                 break;
-
-            //Caso para usar un comodín (NO ESTÁ TERMINADO)
             case 'A':
+                system("cls");
                 preguntaNueva = cambiarPregunta(nombreArchivo, faseActual, preguntaAleatoria);
                 cout << "Pregunta: " << preguntaNueva.pregunta << endl;
         
@@ -201,23 +368,37 @@ int main() {
             //Caso para usar función de agrear tiempo
             case 'B':
                 break;
-            //Caso para usar borrar dos respuestas
+             //Caso para usar borrar dos respuestas
             case 'C':
+                eliminarDosRespuestas(preguntaAleatoria);
+                imprimirCentrado(marcoPregunta);
+                imprimirCentrado(preguntaAleatoria.pregunta);
+                imprimirCentrado(marcoPregunta);
+
                 break;
+
+            case 'Y':
+
             default:
-                cout << "Entrada no válida. Intente de nuevo." << endl;
+                cout << "Entrada no valida. Intente de nuevo." << endl;
                 continue;
             }
-
-            // Ver resultado
+            // Ver resultado y motrar la cantidad de dinero en el banco
             if (esCorrecta) {
-                cout << "¡Respuesta correcta!" << endl;
+                cout << "Respuesta correcta!" << endl;
                 faseActual+=1;
-            } else {
-                cout << "Respuesta incorrecta. Fin del juego." << endl;
-                //Agregar codigo para aumentar dinero
+                dineroUsuario += dinero(dineroUsuario, faseActual);
+                cout<<"Ahora tiene "<< dineroUsuario<<" en el banco"<<endl;
+                system("cls");
+            }  else {
+            system("cls");
+            cout<<nombreJuego<<endl;
+            imprimirCentrado(divisor);
+            imprimirCentrado("Respuesta incorrecta. Fin del juego.");
+            imprimirCentrado("Termina el juego con: $", to_string(dineroUsuario));
+            exit(1);//Cambiar el código para que no me saque de una vez.
             }
-    } while(faseActual <= 10 || esCorrecta == true); // Parte para sacar del programa si gana o pierde xd
+    }
 
     do {
         if(faseActual < 10){
@@ -227,3 +408,8 @@ int main() {
     
     return 0;
 }
+
+
+//Proyecto hecho por Santiago Andrés Bonilla Ospina, Antonio Enrique Velasco, Pablo Gianni Jaled.
+
+//Agradecimiento especial a Donovan y a Chat GPT por explicarnos cosas cuando no las entendíamos.

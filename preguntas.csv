@@ -1,4 +1,81 @@
-Pregunta,Respuesta 1,Respuesta 2,Respuesta 3,Respuesta Correcta
-El sistema electoral para determinar las personas que ocuparan cargos publicos:,Sufragio,Adagio,Naufragio,Sufragio
-Una persona famelica esta:,Irritable,Hambrienta,Furiosa,Hambrienta
-Jose Tomas Boves murio en la Batalla de:,Carabobo,Urica,Mucuritas,Urica
+Fase,Pregunta,Respuesta1,Respuesta2,Respuesta3,Respuesta CORRECTA
+1,El sistema electoral para determinar las personas que ocuparan cargos publicos:,Duranguense,Adagio,Naufragio,Sufragio
+2,Una persona famelica esta:,Irritable,Hambrienta,Furiosa,Hambrienta
+3,Jose Tomas Boves murio en la Batalla de:,Carabobo,Boyaca,Mucuritas,Urica
+4,Son las membranas movibles cubiertas de piel que resguardan los ojos,Cejas,Pupilas,Anteojos,Parpados
+5,El albinismo se presenta por la carencia de,Calcio,Vitamina A,Oxigeno,Pigmentacion
+6,Cual de estos instrumentos mide la densidad del aceite,Dinamometro,Micrometro,Holometro,Oleometro
+7," Complete el siguiente trabalenguas: ""Me han dicho que has dicho un dicho. un dicho que he...""",Escuchado,Contado,Aprendido,Dicho
+8,"Uno de ellos canta ""Vamos pa' la conga""",Guillermo Davila,Nino Bravo,Frank Quintero,Ricardo Montaner
+9,Fina Torres dirigio una de las siguientes peliculas,Sicario,Tokio Paraguaipoa,Santera,Mecanicas celestes
+10,Segun el refran: quien es ciego?,La esperanza,El odio,La envidia,El amor
+1, Segun el refran: el que se acuesta a dormir. es porque cria:,Alegria,Flojera,Sueno,Fama
+2,"Quien dirigio la pelicula ""El Padrino"" en1972?",Roman Polanski,Franco Zeffirelli,Federico Fellini,Francis Ford Copolla
+3,Tecnica que describe y representa detalladamente la superficie de un terreno,Serigrafia,Epigrafia,Holografia,Topografia
+4,Segun la cancion de los Hombres G. quien tiene un marcapasos?,Carla,Alba,Laura,Martha
+5,Uno de los libros de J. K. Rowling es Harry Potter y:,El arca perdida,La magia negra,Su varita,El prisionero de Azkaban
+6,"Con que material esculpio Miguel Angel ""La Piedad"" ubicada en el Vaticano?",Bronce,Madera ,Yeso,Marmol
+7,"El venezolano ""pacheco"" significa:",Nostalgia,Calor,Sueno,Frio
+8,Cual es el idioma oficial de Israel?,Japones,Griego,Chino,Hebreo
+9,Cual de los siguientes paises limita con Francia?,Holanda,Suecia,Dinamarca,Belgica
+10,El timbal es un instrumento de,Viento metal,Viento madera,Cuerda,Percusion
+1,"En la oracion: ""Una viejita vende las manzanas"". la palabra ""vende"" es:",Sustantivo,Conjuncion ,Adjetivo,Verbo
+2,Como apodaron a Jose Bonaparte en Espana?,Pepe Plata,Pepe Grunon,Pepe Sombrero,Pepe Botella
+3,"A que tipo de animales se refiere la palabra ""aviario""?",Peces,Mamiferos,Moluscos,Aves
+4,"En que estado de Venezuela se encuentra ubicado el Monumento Natural ""Cerro Autana""?",Falcon,Bolivar,Miranda,Amazonas
+5,Cual de los siguientes paises limita con Francia?,Croacia,Portugal,Turquia,Alemania
+6,La hormiga es un:,Mamifero,Ave,Reptil,Insecto
+7,En la mitologia griega. Eros es considerado el dios del:,Odio,Miedo,Trabajo,Amor
+8, En que pais nacio el reconocido cineasta Francis Ford Coppola?,Italia,Francia,Inglaterra,Estados Unidos
+9,El animal que come carne de otros de su misma especie se llama,Vandalo,Miserable,Sofista,Canibal
+10,Al periodico que se publica en horas de la tarde. se denomina:,Matutino,Clandestino,Pristino,Vespertino
+1,Las Vegas es una ciudad estadounidense que queda en:,Oklahoma,Arizona,Colorado,Nevada
+2,Cual de estos animales es un rumiante?,La ardilla,El caracol,El loro,La vaca
+3,Es el paso del agua del estado liquido al estado gaseoso,Licuefaccion,Infiltracion,Sublimacion,Evaporacion
+4,Donde se desarrollo la civilizacion etrusca?,Caucao,Norte de Africa,Extremo Oriente,Peninsula Italica
+5,Segun el refran: entre ellos no se pisan la manguera:,Los policias,Los mecanicos,Los toreros,Los bomberos
+6,"Cual es el significado del prefijo ""epi-""?",Alredor,Episodio,Inferior,Sobre
+7,"Uno de ellos es el ""Hombre mono"":",Dracula,Hercules,Frankenstein,Tarzan
+8,Que parte del cuerpo se examina en una encefalografia?,Ovarios,Pulmones,Higado,Craneo
+9,Es el espacio de tiempo durante el cual un Estado no tiene soberano:,Internodio,Internuncio,Intermezzo,Interregno
+10,"Asi dice el trabalenguas: ""Un burro comia berros y el perro se los...""",Quito,Escondio,Llevo,Robo
+1,La sede de los Navegantes del Magallanes queda en la ciudad de:,Caracas,Maracaibo,LOS Teques,Valencia
+2, El peltre es una aleacion de estano. cobre. antimonio y:,Hierro,Oro,Plata,Plomo
+3,Un espacio cubierto de vegetacion en medio del desierto. es un:,Valle,Estuario,Atolon,Oasis
+4,Una persona languida tiene una apariencia:,Fuerte,Timida,Robusta,Debil
+5,Cual de estos paises limita con Italia?,Alemania,Hungria,Republica Checa,Eslovenia
+6,Cuando alguien esta emparamado. quiere decir que esta:,Cansado,Enfermo,Contento,Mojado
+7,Miguel Indurain es un destacado:,Boxeador,Beisbolista,Futbolista,Ciclista
+8,La jibia es un:,Insecto,Reptil,Pez,Molusco
+9,Es el oso blanco que habita en el hielo artico,Tropical,Oriental,Montanes,Polar
+10,La coroides es una membrana que se encuentra en:,El corazon,El pulmon,El cerebro,El ojo
+1,"Que elemento quimico es representado por el simbolo ""P""?",Bromo,Boro,Rubidio,Fosforo
+2,Cual de estos no es un titulo nobiliario?,Marques,Conde,Duque,Almirante
+3,Tim Burton dirigio la pelicula,Inteligencia Artificial,Hombres de Negro,Juegos Macabros,El gran pez
+4,"Es el titulo de una pelicula de Disney: ""La Bella...""",Dalmata,Bruja,Fiestera,Durmiente
+5,Cual es el gentilicio de una persona nacida en Belgica?,Belgatario,Belganes,Belganita,Belga
+6,Que lee un quiromante para predecir el futuro?,El cafe,Los caracoles,El tabaco,Las lineas de la mano
+7,Es el nombre de uno de los Tres Reyes Magos:,Barrabas,Jonas,Judas,Melchor
+8,Cual de estos bailes es tradicional de Espana?,Samba,Joropo,Cumbia,Fandango
+9,Una persona que padece polidipsia siente una constante necesidad de:,Dormir,Hablar,Correr,Beber
+10,Generalmente. con que se rellenan las pinatas?,Pure de papas,Tierra,Algodon,Caramelos
+1,"Que clase de palabra es ""segun""?",Verbo,Sustantivo,Adjetivo,Preposicion
+2,"La palabra ""trapo"" proviene del:",Griego,Chino,Arabe,Latin
+3,En el aparato reproductor femenino se encuentran las trompas de:,Eustaquio,Diogenes,Augusto,Falopio
+4,El Tour de Francia es una famosa competencia de:,Golf,Futbol,Automovilismo,Ciclismo
+5,Donde queda el volcan Baru?,Guatemala,Mexico,Columbia,Panama
+6,La continua y persistente subida general de los precios. se denomina:,Deflaciom,Precipitacion,Superavit,Inflacion
+7,Para ir en linea recta del estado Delta Amacuro al estado Zulia. debes ir en direccion:,Norte,Sur,Este,Oeste
+8,De donde se extrae el alcohol metilico?,Animales,Huesos,Aluminio,Madera
+9,"""Los Roques"" es un:",Bote,Campamento,Bohio,Archipielago
+10,Cual de las siguientes palabras es una preposicion?,La,Una,Ser,Debil
+1,"Quien escribio el poema epico ""La Araucana""?",Pio Baroja,Pedro Calderon de la Barca,Antonio Arraiz,Alonzo de Ercilla
+2,"La palabra ""espanto"" esta relacionada con la idea de",Santo,Angel,Hada,Fantasma
+3,CUAL ES LA MONEDA DE LA INDIA?�,Drakar,Marco,Dinar,Rupia
+4,QUE PAIS DE SURAMERICA ESTA RODEADO POR EL OCEANO ATLANTICO Y PACIFICO?�,Brasil,Uruguay,Bolivia,Colombia
+5,CUAL ES LA CAPITAL DE SUECIA?�,Berlin,Helsinki,Varsovia,Estocolmo
+6,"QUE ESCRITOR PREMIO NOBEL ESCRIBIO ""CIEN ANOS DE SOLEDAD""? ",Mario Vargas Llosa,Julio Verne,Gabriela Mistral,Gabriel Garcia Marquez
+7,CUAL ES LA CAPITAL DEL ESTADO DE NUEVA YORK?�,Nueva York,Vermont,New Jersey,Albany
+8,QUE CIUDAD LATINOAMERICANA ES CONOCIDA COMO LA ATENAS SURAMERICANA?�,Buenos Aires,Santiago de Chile,CDMX,Bogota
+9,COMO SE LLAMO EL AVION QUE LANZO LA BOMBA ATOMICA EN JAPON?�,Junker,Meredith,Stucka,Enola Gay
+10,CUAL ES LA PRINCIPAL ISLA DE LOS EE.UU?�,Puerto Rico,Samoa,Midway,Hawai
