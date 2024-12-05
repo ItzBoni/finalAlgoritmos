@@ -18,6 +18,7 @@ using namespace std;
 //Variables globales
 mutex coutMutex;
 
+
 //Estructura para almacenar las respuestas y si es correcta
 struct Respuesta {
     string respuesta;
@@ -35,14 +36,18 @@ struct Pregunta {
 };
 
 //Función que maneja el temporizador en el juego
-void iniciarTemporizador(int duracionSegundos, atomic<bool>& tiempoTerminado) {
-    for (int i = duracionSegundos; i > 0; --i) {
+void iniciarTemporizador(atomic<int>& duracionSegundos, atomic<bool>& tiempoTerminado, atomic<bool> agregarTiempo = false) {
+    int i = duracionSegundos;
+    if (agregarTiempo) i += 15;
+
+    for (i; i > 0; --i) {
         if (tiempoTerminado) return; // Salir si el jugador responde
-        cout <<"\033[s" << "\033[18;53H" << "Tiempo restante: " << i << " segundos" << "\033[u"; //gracias Donovan por el truco con ASCII
+        cout <<"\033[s" << "\033[18;52H" << "Tiempo restante: " << i << " segundos" << "\033[u"; //gracias Donovan por el truco con ASCII
         this_thread::sleep_for(chrono::seconds(1)); // Esperar 1 segundo
     }
     tiempoTerminado = true; // Marcar que el tiempo ha terminado
 }
+
 
 //Función para manejar el dinero en el juego
 int dinero(int dineroUsuario, int faseActual) {
@@ -89,8 +94,8 @@ int dinero(int dineroUsuario, int faseActual) {
 // Función para leer el CSV y devolver una pregunta aleatoria
 Pregunta buscarPreguntaAleatoria(const string& nombreArchivo, int faseActual) {
     vector<Pregunta> preguntas;
+    vector<Pregunta> preguntasFase;
     string linea;
-    int indiceAleatorio;
 
     ifstream archivo(nombreArchivo);
     if (!archivo.is_open()) {
@@ -98,7 +103,7 @@ Pregunta buscarPreguntaAleatoria(const string& nombreArchivo, int faseActual) {
         return {}; // Retornar estructura vacía
     }
 
-    //Linea para excluir los titulos de las columnas
+    // Leer la primera línea (encabezados)
     getline(archivo, linea);
 
     // Leer el resto de las líneas del archivo
@@ -114,33 +119,33 @@ Pregunta buscarPreguntaAleatoria(const string& nombreArchivo, int faseActual) {
         // Separar los valores por comas
         getline(ss, fase, ',');
         getline(ss, pregunta, ',');
-        getline(ss, respuesta1  , ',');
+        getline(ss, respuesta1, ',');
         getline(ss, respuesta2, ',');
         getline(ss, respuesta3, ',');
         getline(ss, respuesta4, ',');
 
-        // Guardar en la estructura y añadir al vector
-        preguntas.push_back({fase, pregunta, {respuesta1, correcta1}, {respuesta2, correcta2}, {respuesta3, correcta3}, {respuesta4, correcta4}});
+        // Agregar al vector si la fase es válida
+        try {
+            int faseInt = stoi(fase); // Convertir fase a entero
+            preguntas.push_back({fase, pregunta, {respuesta1, correcta1}, {respuesta2, correcta2}, {respuesta3, correcta3}, {respuesta4, correcta4}});
+            if (faseInt == faseActual) {
+                preguntasFase.push_back(preguntas.back());
+            }
+        } catch (exception& e) {
+            cout << "Error al convertir la fase: " << e.what() << endl;
+        }
     }
     archivo.close();
 
-    // Verificar que haya preguntas en el archivo
-    if (preguntas.empty()) {
-        cout << "El archivo no contiene preguntas válidas." << endl;
+    // Verificar que haya preguntas para la fase actual
+    if (preguntasFase.empty()) {
+        cout << "No hay preguntas para la fase " << faseActual << endl;
         return {};
     }
 
-    // Elegir pregunta de la fase actual
-    do {
-        indiceAleatorio = rand() % preguntas.size();
-        if(stoi(preguntas[indiceAleatorio].fase) == faseActual){
-            return preguntas[indiceAleatorio];
-        }
-    } while (indiceAleatorio != faseActual);
-    
-    //Si no se retorna nada con el código de arriba se hace esto
-    cout << "No hay preguntas para la fase " << faseActual << endl;
-    return {};
+    // Elegir una pregunta aleatoria
+    int indiceAleatorio = rand() % preguntasFase.size();
+    return preguntasFase[indiceAleatorio];
 }
 
 //Función para imprimir las respuestas de forma aleatoria
@@ -164,22 +169,6 @@ void mezclarRespuestas(Pregunta& pregunta){
     pregunta.respuesta2 = respuestasMezclar[1];
     pregunta.respuesta3 = respuestasMezclar[2];
     pregunta.respuesta4 = respuestasMezclar[3];
-}
-
-//Función para powerup de cambiar la pregunta
-Pregunta cambiarPregunta(string nombreArchivo, int faseActual, Pregunta preguntaActual){
-    system("cls");
-    Pregunta preguntaNueva = {};
-    do {
-        preguntaNueva = buscarPreguntaAleatoria(nombreArchivo, faseActual);
-    } while (preguntaNueva.pregunta == preguntaActual.pregunta); 
-    
-    if (preguntaNueva.pregunta.empty()) {
-            cout << "No se pudo encontrar una nueva pregunta diferente." << endl;
-            return preguntaActual; 
-        }
-    
-    return preguntaNueva;
 }
 
 void eliminarDosRespuestas(Pregunta& pregunta) {
@@ -294,14 +283,21 @@ int main() {
     Pregunta preguntaAleatoria;
     bool esCorrecta = false;
     bool comodinPregunta = false;
-    bool comodinTimer = false;
+    bool comodinTimer = false; //Este es para saber si ya se usó el powerup del temporizador
+    bool comodinTimer2 = true; //Este es para manejar el temporizador y que no se siga multiplicando
     bool comodinRespuestas = false;
+    bool comodinRespuestas2 = true;
+    bool inputCorrecto = true;
     char inputUsuario;
     int faseActual = 1;
     int dineroUsuario = 0;
-    const int TIEMPO_LIMITE = 30;
+    int contador = 0;
     string nombreArchivo = "preguntas.csv"; 
+
+    //Variables para el temporizador
+    atomic<int> tiempoLimite = 30;
     atomic<bool> tiempoTerminado = false;
+
     //Variables para la pantalla
     string divisor(90,'_');
     string nombreJuego = R"(
@@ -312,6 +308,7 @@ int main() {
  \__\_\\__,_|_|\___|_| |_|  \__, |\__,_|_|\___|_|  \___| |___/\___|_|    |_| |_| |_|_|_|_|\___/|_| |_|\__,_|_|  |_|\___/  
                                |_|                                                                                        )";
 
+    
     //Parte principal del programa para seguir repitiendo hasta ganar o que el usuario pierda.
     while (faseActual <= 10) {
         system("cls");
@@ -321,7 +318,7 @@ int main() {
             imprimirCentrado(divisor);
             cout<<nombreJuego<<endl;
             imprimirCentrado(divisor);
-            if(faseActual <2) imprimirCentrado("Presione enter para iniciar");
+            if(faseActual < 2) imprimirCentrado("Presione enter para iniciar");
         } while (cin.get() != '\n');
 
         imprimirCentrado("Bienvenido a la fase ", to_string(faseActual));
@@ -329,20 +326,32 @@ int main() {
         cout<<endl;
 
         //Creo pregunta Aleatoria dentro de esta función
-        preguntaAleatoria = buscarPreguntaAleatoria(nombreArchivo, faseActual);
-        mezclarRespuestas(preguntaAleatoria);
+        if (comodinTimer2 || comodinRespuestas2 || inputCorrecto) {
+            preguntaAleatoria = buscarPreguntaAleatoria(nombreArchivo, faseActual);
+            mezclarRespuestas(preguntaAleatoria);
+        }
 
-        imprimirPreguntas(preguntaAleatoria);
+        if (comodinRespuestas2) comodinTimer2 = false;
 
+        imprimirPreguntas(preguntaAleatoria, comodinPregunta, comodinTimer, comodinRespuestas);
+
+        //Espera tantito para que se cargue todo y el temporizador quede acomodado en la parte correcta
         Sleep(500);
 
-        thread temporizador(iniciarTemporizador, TIEMPO_LIMITE, ref(tiempoTerminado));
+        //Inicializa el temporizador en otro hilo de procesador
+        thread temporizador(iniciarTemporizador, ref(tiempoLimite), ref(tiempoTerminado), comodinTimer2);
+        
+        //Hacen que no se pueda usar de nuevo el comodin, pero que 
+        if (comodinTimer) comodinTimer2 = true;
+        if (comodinRespuestas) comodinRespuestas2 = true;
 
         {
             lock_guard<mutex> lock(coutMutex);
             imprimirCentrado("Su respuesta es: ");
             cin>>inputUsuario;
         }
+
+        inputUsuario = toupper(inputUsuario);
 
         //Termina el temporizador si el tiempo es el correcto, y después lo agrega al programa
         tiempoTerminado = true;
@@ -366,29 +375,56 @@ int main() {
                 comodinPregunta = true;
                 continue;
                 break;
-            //Caso para usar función de agrear tiempo
+            //Caso para usar función de agregar tiempo
             case 'B':
+                //(Santi): Hice esta lógica a las 2 AM y solo Dios y yo sabíamos como funcionaba. Ahora solo es Dios.
+                comodinTimer = true;
+                comodinTimer2 = false;
+                comodinRespuestas2 = false;
                 break;
              //Caso para usar borrar dos respuestas
             case 'C':
                 eliminarDosRespuestas(preguntaAleatoria);
                 comodinRespuestas = true;
+                comodinRespuestas2 = false;
+                comodinTimer2 = false;
                 break;
-
-            case 'Y':
 
             default:
                 cout << "Entrada no valida. Intente de nuevo." << endl;
+                inputCorrecto = false;
                 continue;
             }
             // Ver resultado y motrar la cantidad de dinero en el banco
             if (esCorrecta) {
-                cout << "Respuesta correcta!" << endl;
+                system("cls");
+                imprimirCentrado(divisor);
+                cout<<nombreJuego<<endl;
+                imprimirCentrado(divisor);
+                imprimirCentrado("Respuesta correcta!");
                 faseActual+=1;
                 dineroUsuario += dinero(dineroUsuario, faseActual);
-                cout<<"Ahora tiene "<< dineroUsuario<<" en el banco"<<endl;
-                system("cls");
-            }  else if (comodinPregunta) {
+                imprimirCentrado("Ahora tiene ", to_string(dineroUsuario));
+
+                imprimirCentrado(divisor);
+                imprimirCentrado("Desea continuar? (Y/N)");
+                cin>>inputUsuario;
+                inputUsuario = toupper(inputUsuario);
+
+                //Bucle que verifica si el usuario quiere continuar.
+                do{
+                    if(inputUsuario == 'Y') {
+                        continue;
+                    } else if (inputUsuario == 'N') {
+                        imprimirCentrado("Termina el juego con $", to_string(dineroUsuario));
+                        imprimirCentrado("Gracias por jugar nuestro jueguito :3");
+                        exit(0);
+                    } else {
+                        imprimirCentrado("Entrada no válida, intente de nuevo.");
+                    }
+
+                } while (inputUsuario != 'Y' || inputUsuario != 'N');
+            }  else if (comodinPregunta || comodinTimer || comodinRespuestas) {
                 continue;
             } else {
                 system("cls");
@@ -411,5 +447,6 @@ int main() {
 
 
 //Proyecto hecho por Santiago Andrés Bonilla Ospina, Antonio Enrique Velasco, Pablo Gianni Jaled.
+//No es el más bonito ni el más eficiente, pero es trabajo honesto
 
 //Agradecimiento especial a Donovan por explicarnos cosas cuando no las entendíamos.
