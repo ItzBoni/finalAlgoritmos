@@ -1,3 +1,5 @@
+//PROGRAMA CREADO POR SANTIAGO BONILLA, ANTONIO ENRIQUE, PABLO JALED
+
 #include<iostream>
 #include<fstream>
 #include<vector>
@@ -66,7 +68,7 @@ void imprimirCentrado(const string& texto, const string& texto2 = "", const stri
     cout << textoCompleto << endl;
 }
 
-//Función para imprimir preguntas
+//Función para imprimir preguntas y ahorrar espacio en el main
 void imprimirPreguntas(Pregunta& preguntaAleatoria, bool comodinA = false, bool comodinB = false, bool comodinC = false){
     string divisor(90,'_');
     string marcoPregunta;
@@ -131,6 +133,8 @@ void sacarJuego() {
 //Función que maneja el temporizador en el juego
 void iniciarTemporizador(atomic<int>& duracionSegundos, atomic<bool>& tiempoTerminado, atomic<bool> agregarTiempo = false) {
     int i = duracionSegundos;
+    
+    //Esta línea agrega el tiempo en caso de que el bono haya sido utilizado
     if (agregarTiempo) i += 15;
 
     for (i; i >= 0; --i) {
@@ -138,6 +142,7 @@ void iniciarTemporizador(atomic<int>& duracionSegundos, atomic<bool>& tiempoTerm
         cout <<"\033[s" << "\033[18;52H" << "Tiempo restante: " << i << " segundos" << "\033[u"; //gracias Donovan por el truco con ASCII
         this_thread::sleep_for(chrono::seconds(1)); 
     }
+    //(Santi) Otra parte lógica que hice en la madrugada y no me acuerdo bien como funciona :D
     tiempoTerminado = true;
 }
 
@@ -192,10 +197,9 @@ Pregunta buscarPreguntaAleatoria(const string& nombreArchivo, int faseActual) {
     ifstream archivo(nombreArchivo);
     if (!archivo.is_open()) {
         cout << "No se pudo abrir el archivo: " << nombreArchivo << endl;
-        return {}; // Retornar estructura vacía
+        return {}; 
     }
-
-    // Leer la primera línea (encabezados)
+    
     getline(archivo, linea);
 
     // Leer el resto de las líneas del archivo
@@ -270,7 +274,7 @@ void eliminarDosRespuestas(Pregunta& pregunta) {
     if (!pregunta.respuesta3.respuestaCorrecta) indicesIncorrectos.push_back(3);
     if (!pregunta.respuesta4.respuestaCorrecta) indicesIncorrectos.push_back(4);
 
-    // Barajar los �ndices y eliminar dos
+    // Barajar los indices y eliminar dos
     random_device rd;
     mt19937 g(rd());
     shuffle(indicesIncorrectos.begin(), indicesIncorrectos.end(), g);
@@ -293,7 +297,6 @@ void eliminarDosRespuestas(Pregunta& pregunta) {
     }
 }
 
-//Si llegas al punto de una fase alta poner que pierdan todo el dinero.
 int main() {
     // Semilla para números aleatorios
     srand(double(time(NULL)));
@@ -320,6 +323,7 @@ int main() {
     
     //Parte principal del programa para seguir repitiendo hasta ganar o que el usuario pierda.
     while (faseActual <= 10) {
+        //Este bloque cambia el color de la consola y hace que espere un enter del usuario para iniciar el programa
         system("cls");
         tiempoTerminado = false;
         system("COLOR 17");
@@ -334,8 +338,8 @@ int main() {
         imprimirCentrado("Su dinero en el banco es: $", to_string(dineroUsuario));
         cout<<endl;
 
-        //Creo pregunta Aleatoria dentro de esta función
-        if (!comodinTimer2 || !comodinRespuestas2) {
+        //Crear pregunta Aleatoria si no se han usado los comodines (para no cambiar la pregunta con el uso de un comodin)
+        if (!comodinTimer2 || !comodinRespuestas2 || comodinPregunta2) {
             if(inputCorrecto) {
                 preguntaAleatoria = buscarPreguntaAleatoria(nombreArchivo, faseActual);
                 mezclarRespuestas(preguntaAleatoria);
@@ -354,13 +358,16 @@ int main() {
         if (comodinTimer) comodinTimer2 = true;
         if (comodinRespuestas) comodinRespuestas2 = true;
 
+        //para que no se ande moviendo (si, tiene bugs pero ya no supe como arreglarlos (santi))
         {
             lock_guard<mutex> lock(coutMutex);
             imprimirCentrado("Su respuesta es: ");
             cin>>inputUsuario;
         }
 
+        //Esta parte permite normalizar el input del usuario para hacerlo fool-proof
         inputUsuario = toupper(inputUsuario);
+
         //Termina el temporizador si el tiempo es el correcto, y después lo agrega al programa
         tiempoTerminado = true;
         temporizador.join();
@@ -399,7 +406,7 @@ int main() {
                 comodinTimer2 = true;
                 comodinRespuestas2 = true;
                 break;
-
+            //Continua el flujo del programa si la entrada no es valida para que repita la pregunta
             default:
                 cout << "Entrada no valida. Intente de nuevo." << endl;
                 inputCorrecto = false;
@@ -444,8 +451,11 @@ int main() {
                         imprimirCentrado("Entrada no válida, intente de nuevo.");
                     }
                 } while (inputUsuario != 'Y' && inputUsuario != 'N');
-            }  else if (comodinPregunta2 || comodinTimer2 || comodinRespuestas2) {
+            
+            //Revisa si se usaron comodines, continúa el flujo del while para que se hagan los cambios necesarios
+            }  else if (comodinPregunta2 || comodinTimer2 || comodinRespuestas2 || !inputCorrecto) {
                 continue;
+            //Si la respuesta es incorrecta, termina el juego y enseña el dinero que se acumuló en el banco
             } else if(!esCorrecta) {
                 system("cls");
                 cout<<nombreJuego<<endl;
@@ -460,6 +470,7 @@ int main() {
             } 
     }
 
+    //Cuando la fase actual sea mayor a 10 se da como terminado el juego con este bloque de codigo
     do {
         if(faseActual < 10){
             cout<<nombreJuego<<endl;
