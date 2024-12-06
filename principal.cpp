@@ -326,7 +326,7 @@ int main() {
         //Este bloque cambia el color de la consola y hace que espere un enter del usuario para iniciar el programa
         system("cls");
         tiempoTerminado = false;
-        system("COLOR 17");
+        system("COLOR 01");
         do {
             imprimirCentrado(divisor);
             cout<<nombreJuego<<endl;

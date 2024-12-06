@@ -1,0 +1,39 @@
+SANTIAGO BONILLA, ANTONIO ENRIQUE, PABLO JALED
+
+1. INICIAR programa
+2. DEFINIR variables globales:
+    - Mutex para sincronizar salidas en consola
+    - Nombre del juego en formato ASCII
+    - Variables para almacenar dinero del usuario y otros indicadores de juego
+3. DEFINIR estructuras:
+    - `Respuesta`: Contiene texto y si es correcta
+    - `Pregunta`: Contiene el texto de la pregunta y cuatro respuestas posibles
+4. DEFINIR funciones:
+    - `obtenerAnchoConsola`: Retorna el ancho de la ventana de consola
+    - `imprimirCentrado`: Imprime texto centrado en la consola
+    - `imprimirPreguntas`: Imprime una pregunta con sus respuestas y comodines
+    - `mezclarRespuestas`: Aleatoriza el orden de las respuestas de una pregunta
+    - `eliminarDosRespuestas`: Marca como "eliminadas" dos respuestas incorrectas
+    - `iniciarTemporizador`: Controla un contador de tiempo en segundos
+    - `sacarJuego`: Finaliza el juego si el tiempo termina
+    - `dinero`: Calcula el dinero acumulado según la fase actual
+    - `buscarPreguntaAleatoria`: Lee preguntas de un archivo CSV y selecciona una aleatoria
+5. ENTRADA al bucle principal del juego:
+    - Mientras el usuario no alcance la última fase:
+        a) LIMPIAR la pantalla
+        b) Imprimir fase actual y dinero acumulado
+        c) Seleccionar una pregunta aleatoria para la fase actual
+        d) Imprimir pregunta y respuestas
+        e) INICIAR temporizador en un hilo separado
+        f) CAPTURAR entrada del usuario:
+            - Validar si la entrada es correcta o corresponde a un comodín
+        g) VERIFICAR la respuesta del usuario:
+            - Si es correcta:
+                i) Incrementar fase y dinero
+                ii) Consultar al usuario si desea continuar
+            - Si es incorrecta:
+                i) Mostrar respuesta correcta
+                ii) Terminar el juego
+6. CUANDO el usuario alcance la última fase:
+    - Mostrar mensaje de victoria y finalizar el programa
+7. FINALIZAR programa
