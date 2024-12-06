@@ -3,7 +3,6 @@
 #include<vector>
 #include<string>
 #include<sstream>
-#include<cstdlib>
 #include<ctime>
 #include<algorithm>
 #include<random>
@@ -137,14 +136,10 @@ void iniciarTemporizador(atomic<int>& duracionSegundos, atomic<bool>& tiempoTerm
     for (i; i >= 0; --i) {
         if (tiempoTerminado) break; // Salir si el jugador responde
         cout <<"\033[s" << "\033[18;52H" << "Tiempo restante: " << i << " segundos" << "\033[u"; //gracias Donovan por el truco con ASCII
-        this_thread::sleep_for(chrono::seconds(1)); // Esperar 1 segundo
+        this_thread::sleep_for(chrono::seconds(1)); 
     }
-    tiempoTerminado = true; // Marcar que el tiempo ha terminado
-
-    if(tiempoTerminado) sacarJuego();
-
+    tiempoTerminado = true;
 }
-
 
 //Función para manejar el dinero en el juego
 int dinero(int dineroUsuario, int faseActual) {
@@ -298,9 +293,7 @@ void eliminarDosRespuestas(Pregunta& pregunta) {
     }
 }
 
-
 //Si llegas al punto de una fase alta poner que pierdan todo el dinero.
-
 int main() {
     // Semilla para números aleatorios
     srand(double(time(NULL)));
@@ -309,18 +302,20 @@ int main() {
     Pregunta preguntaAleatoria;
     bool esCorrecta = false;
     bool comodinPregunta = false;
+    bool comodinPregunta2 = false;
     bool comodinTimer = false; //Este es para saber si ya se usó el powerup del temporizador
-    bool comodinTimer2 = true; //Este es para manejar el temporizador y que no se siga multiplicando
+    bool comodinTimer2 = false; //Este es para manejar el temporizador y que no se siga multiplicando
     bool comodinRespuestas = false;
-    bool comodinRespuestas2 = true;
+    bool comodinRespuestas2 = false;
     bool inputCorrecto = true;
     char inputUsuario;
     int faseActual = 1;
     int contador = 0;
     string nombreArchivo = "preguntas.csv"; 
+    string respuestaCorrecta;
 
     //Variables para el temporizador
-    atomic<int> tiempoLimite = 3;
+    atomic<int> tiempoLimite = 30;
     atomic<bool> tiempoTerminado = false;
     
     //Parte principal del programa para seguir repitiendo hasta ganar o que el usuario pierda.
@@ -340,12 +335,12 @@ int main() {
         cout<<endl;
 
         //Creo pregunta Aleatoria dentro de esta función
-        if (comodinTimer2 || comodinRespuestas2 || inputCorrecto) {
-            preguntaAleatoria = buscarPreguntaAleatoria(nombreArchivo, faseActual);
-            mezclarRespuestas(preguntaAleatoria);
+        if (!comodinTimer2 || !comodinRespuestas2) {
+            if(inputCorrecto) {
+                preguntaAleatoria = buscarPreguntaAleatoria(nombreArchivo, faseActual);
+                mezclarRespuestas(preguntaAleatoria);
+            }
         }
-
-        if (comodinRespuestas2) comodinTimer2 = false;
 
         imprimirPreguntas(preguntaAleatoria, comodinPregunta, comodinTimer, comodinRespuestas);
 
@@ -355,7 +350,7 @@ int main() {
         //Inicializa el temporizador en otro hilo de procesador
         thread temporizador(iniciarTemporizador, ref(tiempoLimite), ref(tiempoTerminado), comodinTimer2);
         
-        //Hacen que no se pueda usar de nuevo el comodin, pero que 
+        //Hacen que no se pueda usar de nuevo el comodin, pero que funcione una sola vez :>
         if (comodinTimer) comodinTimer2 = true;
         if (comodinRespuestas) comodinRespuestas2 = true;
 
@@ -364,14 +359,11 @@ int main() {
             imprimirCentrado("Su respuesta es: ");
             cin>>inputUsuario;
         }
-        tiempoTerminado = true; 
-
-        if(temporizador.joinable()) {
-            temporizador.join();
-        }
 
         inputUsuario = toupper(inputUsuario);
         //Termina el temporizador si el tiempo es el correcto, y después lo agrega al programa
+        tiempoTerminado = true;
+        temporizador.join();
 
         //Si la respuesta introducida es correcta, aumentar la fase por uno
         switch (inputUsuario) {
@@ -389,21 +381,23 @@ int main() {
                 break;
             case 'A':
                 comodinPregunta = true;
+                comodinPregunta2 = true;
                 continue;
                 break;
             //Caso para usar función de agregar tiempo
             case 'B':
                 //(Santi): Hice esta lógica a las 2 AM y solo Dios y yo sabíamos como funcionaba. Ahora solo es Dios.
                 comodinTimer = true;
-                comodinTimer2 = false;
-                comodinRespuestas2 = false;
+                comodinTimer2 = true;
+                comodinRespuestas2 = true;
+                tiempoTerminado = false;
                 break;
              //Caso para usar borrar dos respuestas
             case 'C':
                 eliminarDosRespuestas(preguntaAleatoria);
                 comodinRespuestas = true;
-                comodinRespuestas2 = false;
-                comodinTimer2 = false;
+                comodinTimer2 = true;
+                comodinRespuestas2 = true;
                 break;
 
             default:
@@ -411,51 +405,68 @@ int main() {
                 inputCorrecto = false;
                 continue;
             }
+
+            //Sección que revisa cual de las respuestas es la correcta y la guarda en una string para imprimir después.
+            if (preguntaAleatoria.respuesta1.respuestaCorrecta){ respuestaCorrecta = preguntaAleatoria.respuesta1.respuesta;
+            } else if (preguntaAleatoria.respuesta2.respuestaCorrecta) {respuestaCorrecta = preguntaAleatoria.respuesta2.respuesta;
+            } else if (preguntaAleatoria.respuesta3.respuestaCorrecta) {respuestaCorrecta = preguntaAleatoria.respuesta3.respuesta;
+            } else if (preguntaAleatoria.respuesta4.respuestaCorrecta) {respuestaCorrecta = preguntaAleatoria.respuesta4.respuesta;}
+            
             // Ver resultado y motrar la cantidad de dinero en el banco
             if (esCorrecta) {
-                system("cls");
-                imprimirCentrado(divisor);
-                cout<<nombreJuego<<endl;
-                imprimirCentrado(divisor);
-                imprimirCentrado("Respuesta correcta!");
-                faseActual+=1;
-                dineroUsuario += dinero(dineroUsuario, faseActual);
-                imprimirCentrado("Ahora tiene ", to_string(dineroUsuario));
-
-                imprimirCentrado(divisor);
-                imprimirCentrado("Desea continuar? (Y/N)");
-                cin>>inputUsuario;
-                inputUsuario = toupper(inputUsuario);
-
                 //Bucle que verifica si el usuario quiere continuar.
                 do{
+                    system("cls");
+                    imprimirCentrado(divisor);
+                    cout<<nombreJuego<<endl;
+                    imprimirCentrado(divisor);
+                    imprimirCentrado("Respuesta correcta!");
+                    faseActual+=1;
+                    dineroUsuario += dinero(dineroUsuario, faseActual);
+                    imprimirCentrado("Ahora tiene ", to_string(dineroUsuario));
+
+                    imprimirCentrado(divisor);
+                    imprimirCentrado("Desea continuar? (Y/N)");
+
+                    cin>>inputUsuario;
+                    inputUsuario = toupper(inputUsuario);
+
                     if(inputUsuario == 'Y') {
                         continue;
                     } else if (inputUsuario == 'N') {
                         imprimirCentrado("Termina el juego con $", to_string(dineroUsuario));
                         imprimirCentrado("Gracias por jugar nuestro jueguito :3");
+                        imprimirCentrado("Presiona cualquier tecla para salir del juego");
+                        cin>>inputUsuario;
+                        resetColor();
                         exit(0);
                     } else {
                         imprimirCentrado("Entrada no válida, intente de nuevo.");
                     }
-
-                } while (inputUsuario != 'Y' || inputUsuario != 'N');
-            }  else if (comodinPregunta || comodinTimer || comodinRespuestas) {
+                } while (inputUsuario != 'Y' && inputUsuario != 'N');
+            }  else if (comodinPregunta2 || comodinTimer2 || comodinRespuestas2) {
                 continue;
             } else if(!esCorrecta) {
                 system("cls");
                 cout<<nombreJuego<<endl;
                 imprimirCentrado(divisor);
                 imprimirCentrado("Respuesta incorrecta. Fin del juego.");
+                imprimirCentrado("Respuesta correcta: ", respuestaCorrecta);
                 imprimirCentrado("Termina el juego con: $", to_string(dineroUsuario));
                 resetColor();
+                imprimirCentrado("Presione cualquier tecla para salir");
+                cin>>inputUsuario;
                 exit(1);
-            }
+            } 
     }
 
     do {
         if(faseActual < 10){
-            cout<<"Has ganado!!! Presiona enter para salir del juego"<<endl;
+            cout<<nombreJuego<<endl;
+            imprimirCentrado("Termina el juego con $", to_string(dineroUsuario));
+            imprimirCentrado("Gracias por jugar nuestro jueguito :3");
+            imprimirCentrado("Has ganado!!! Presiona enter para salir del juego");
+            resetColor();
         }
     } while (cin.get() != '\n');
     
